@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
 using System.Collections.Generic;
 
 #nullable disable
@@ -14,5 +15,7 @@ namespace ReviewWT.Models
 
         public virtual Item Item { get; set; }
         public virtual CustomerOrder OrderNumberNavigation { get; set; }
+
+        
     }
 }

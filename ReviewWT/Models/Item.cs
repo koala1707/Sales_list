@@ -48,5 +48,6 @@ namespace ReviewWT.Models
         public virtual ICollection<ItemMarkupHistory> ItemMarkupHistories { get; set; }
         public virtual ICollection<ItemsInOrder> ItemsInOrders { get; set; }
         public virtual ICollection<Review> Reviews { get; set; }
+        //public virtual ICollection<CustomerOrder> CustomerOrders { get; set; }
     }
 }

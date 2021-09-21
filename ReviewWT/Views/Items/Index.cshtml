@@ -1,7 +1,8 @@
-﻿@model IEnumerable<ReviewWT.Models.Item>
+﻿@*@model IEnumerable<ReviewWT.Models.Item>*@
 @*@model ReviewWT.ViewModels.ItemSearchViewMode*@
 @*@model IEnumerable<ReviewWT.ViewModels.ItemSearchViewModel>*@
 @*@model ReviewWT.Models.Item*@
+@model ReviewWT.ViewModels.ItemSearchViewModel
 
 
 @{
@@ -29,129 +30,72 @@
         @* 3-5-3: retaining the word a user input *@
         @* the below input does not retain searched word user input *@
         @*<input list="items-list" type="text" name="searchText" class="form-control" placeholder="Item Search" title="Search for items by name" maxlength="100" />*@
-        <input type="text" name="searchText" value="@ViewBag.SearchText" class="form-control" placeholder="Item Search" title="Search for items by name" maxlength="100" />
-        <datalist id="items-list">
-        </datalist>
+        <input list="items-list" asp-for="searchText" type="text"  placeholder="Item Search" title="Search for items by name" minlength="2" maxlength="100" />
+        @*<datalist id="items-list">
+            @foreach (var item in Model.items)
+            {
+                <option value="@item.ItemName" />
+            }
+        </datalist>*@
     </div>
     <div class="col-gl-2">
-        <select name="year_dropdown" class="form-control" asp-items="ViewBag.Year">
+        <select asp-for="year" class="form-control" asp-items="Model.years">
             <option value="">Sale Year</option>
         </select>
     </div>
     <div class="col">
         <button type="submit" class="btn btn-secondary">Search</button>
+        @*<input type="submit" name="searchText" value=""/>*@
+        <br>
+        <br>
     </div>
 </form>
 
-@* 3-5-1: implementing a record count *@
-@if (ViewBag.Count)
-{
-    <p>
-        Your search returned @Model.Count() matching item@(Model.Count() != 1 ? "s" : "")
-    </p>
-}
 
 
-{
-<div class="row justify-content-between">
-    @*@if (Model.Count() > 0)*@
-    {   
-        //https://getbootstrap.com/docs/5.1/content/tables/
-    <table class="table table-striped table-bordered border-primary table-hover">
-        <thead>
-            <tr>
-                <th scope="col">Item Name</th>
-                <th scope="col">Item Description</th>
-                <th scope="col">Item Cost</th>
-                <th scope="col">Category</th>
-                <th scope="col">Units Sold</th>
-                <th scope="col">Customers</th>
 
 
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <th scope="row">@item.ItemName</th>
-                    <td>@item.ItemDescription</td>
-                </tr>
-                
-
-            }
-        </tbody>
-    </table>
-    }
-    else
+    @if (Model.items.Count() > 0 || Model.year != null)
     {
-        <h5 class="text-danger">Sorry... no items matched your search.</h5>
+        
+            <p>
+                Your search returned @Model.items.Count()
+                matching item@(Model.items.Count() != 1 ? "s" : "")
+            </p>
+
+        <div class="row justify-content-between">
+
+            @*https://getbootstrap.com/docs/5.1/content/tables/*@
+            <table class="table table-striped table-bordered border-primary table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Item Name</th>
+                        <th scope="col">Item Description</th>
+                        <th scope="col">Item Cost</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Units Sold</th>
+                        <th scope="col">Customers</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.items)
+                    {
+                    <tr>
+                        <td>@item.item.ItemName</td>
+                        <td>@item.item.ItemDescription</td>
+                        <td>@item.item.ItemCost</td>
+                        <td>@item.item.Category.CategoryName</td>
+                        <td>@item.unitsSold </td>
+                        <td>@item.customerEffect </td>
+                    </tr>
+                    }
+
+                </tbody>
+            </table>
+
+
+        </div>
     }
-</div>
+    
 
-@*  *@}
-
-@* 3-5-2: Showing No results search text message *@
-@*@if (Model.Count() > 0)
-{
-    <div class="row justify-content-between">
-            @foreach (var item in Model)
-                {
-
-                }
-    </div>
-}
-else
-{
-<h5 class="text-danger">Sorry... no items matched your search.</h5>
-}*@
-            
-            @*<h1>Index</h1>
-
-                <p>
-                    <a asp-action="Create">Create New</a>
-                </p>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>
-                                @Html.DisplayNameFor(model => model.searchText)
-                            </th>
-                            <th>
-                                @Html.DisplayNameFor(model => model.category)
-                            </th>
-                            <th>
-                                @Html.DisplayNameFor(model => model.categories)
-                            </th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model.items)
-                        {
-                            <tr>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.ItemName)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.ItemDescription)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.ItemCost)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.ItemImage)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.Category.CategoryName)
-                                </td>
-                                <td>
-                                    <a asp-action="Edit" asp-route-id="@item.ItemId">Edit</a> |
-                                    <a asp-action="Details" asp-route-id="@item.ItemId">Details</a> |
-                                    <a asp-action="Delete" asp-route-id="@item.ItemId">Delete</a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>*@
+  

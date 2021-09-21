@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ReviewWT.Data;
 using ReviewWT.Models;
+using ReviewWT.ViewModels;
 
 namespace ReviewWT.Controllers
 {
@@ -22,46 +23,114 @@ namespace ReviewWT.Controllers
         // GET: Items
         public async Task<IActionResult> Index(string searchText, int? year)
         {
+            ItemSearchViewModel newView = new ItemSearchViewModel();
+            newView.year = year;
+            newView.searchText = searchText;
             //3-5-1: flag to show search record count
-            ViewBag.Count = !string.IsNullOrWhiteSpace(searchText) || year.HasValue;
+            //ViewBag.Count = !string.IsNullOrWhiteSpace(searchText) || year.HasValue;
             //3-5-3: Retaining the word a user input in searching space
-            ViewBag.SearchText = searchText;
-            
+            //ViewBag.SearchText = searchText;
+
+            //.Select(p => new {p.OrderNumber, p.OrderDate.Year})
+
             #region yearQuery
-            var year_dropdown = await _context.CustomerOrders
+            var year_dropdown = _context.CustomerOrders
                 .Select(p => p.OrderDate.Year)
                 .Distinct()
-                .OrderByDescending(p=>p)
-                .ToListAsync();
-            
-            ViewBag.Year = new SelectList(year_dropdown);
+                .OrderByDescending(p => p)
+                .ToList();
+
+            //ViewBag.Year = new SelectList(year_dropdown);
+            //newView has to have Model.customerOrders
+            newView.years = new SelectList(year_dropdown, "OrderDate");
             #endregion
 
+            //#region itemQuery
+
+            //var query = _context.ItemsInOrders
+            //    .Select(iio => iio);
+
+
+            //#endregion
 
             #region itemQuery
-            //3-2-1 Query that selects all items in order of itemName
+
+            //var query = _context.ItemsInOrders
+            //    .Include(iio => iio.Item)
+            //    .Include(iio => iio.OrderNumberNavigation)
+            //    .Select(iio => new ItemsInOrder()
+            //    {
+            //        ItemId = iio.ItemId,
+            //        Item = iio.Item
+            //    });
+
             var query = _context.ItemsInOrders
-                .Select(io => io);
+                .Where(iio => iio.Item.ItemName.Contains(searchText))
+                .Where(iio => iio.OrderNumberNavigation.OrderDate.Year == year)
+                //.Include(iio => iio.OrderNumberNavigation)
+                .Select(iio => iio);
 
-            query = query.Include(i => i.Item).Include(c => c.OrderNumberNavigation);
-            //3-2-2 Optional WHERE clause if searchText is not empty
-            if (!string.IsNullOrWhiteSpace(searchText))
-            {
-                query = query.Where(p => p.Item.ItemName == searchText);
-            }
-            //3-2-3 Include the year (to display year)
-            if (year.HasValue)
-            {
-                query = query.Where(p => p.OrderNumberNavigation.OrderDate.Year == year);
-            }
+            
+            //year
+            
+            //if (year.HasValue)
+            //{
+            //    query = query;
+            //}
+            //var query1 = query.GroupBy(iio => iio.ItemId)
+            //    .Select(iio => new ItemDetails { 
+            //        itemId = iio.Key, 
+            //        customerEffect = iio.Select(co => co.OrderNumberNavigation.CustomerId).Distinct().Count(),
+            //        unitsSold = iio.Sum(iio => iio.NumberOf),
+            //        item = _context.Items.Where(i => i.ItemId == iio.Key).FirstOrDefault()
+
+            //    }) ;
+
+            var display_customer_order = query
+                //.Include(co => co.OrderNumberNavigation)
+                .GroupBy(iio => iio.ItemId)
+                .Select(iio => new ItemDetails
+                {
+                    itemId = iio.Key,
+                    customerEffect = iio.Select(co => co.OrderNumberNavigation.CustomerId).Distinct().Count(),
+                    unitsSold = iio.Sum(iio => iio.NumberOf)
+                });
+
+            var summary = display_customer_order
+                .Select(i => new ItemDetails
+                {
+                    itemId=i.itemId,
+                    customerEffect=i.customerEffect,
+                    unitsSold=i.unitsSold,
+                    item = _context.Items.Include(c => c.Category).Where(c => c.ItemId == i.itemId).FirstOrDefault()
+                });
+                
+
             #endregion
-            //3-2-4 Execute the query with ToListAsync() and pass data to View
-            //return View(await query.ToListAsync());
-            return View(query.ToListAsync());
 
-            //Original
-            //var amazonOrdersContext = _context.Items.Include(i => i.Category);
-            //return View(await amazonOrdersContext.ToListAsync());
+            //newView has to have Model.item
+            //and the Model.item has to have propaties
+            //which are included below e.g. ItemsInOrder
+            //Otherwise, newView.items does not work!
+            newView.items = await summary.ToListAsync();
+
+
+            //#region categories
+
+            //var query_category = _context.Items
+            //    .Select(ic => ic);
+
+           
+            
+
+            //#endregion
+
+            //newView.items = query_category.ToList();
+
+
+            //3-2-4 Execute the query with ToListAsync() and pass data to View
+            return View(newView);
+            
         }
 
         // GET: Items/Details/5
