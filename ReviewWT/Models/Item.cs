@@ -34,6 +34,7 @@ namespace ReviewWT.Models
         [Display(Name = "Item Cost")]
         [DataType(DataType.Currency)]
         [Column(TypeName ="decimal(20,1)")]
+        [DisplayFormat(DataFormatString = "{0:#,##0.#}", ApplyFormatInEditMode = true)]
         public decimal ItemCost { get; set; }
         
         [Display(Name = "Item Image")]
@@ -42,12 +43,9 @@ namespace ReviewWT.Models
         [Display(Name = "Category ID")]
         public int? CategoryId { get; set; }
 
-        //public List<Item> items { get; set; }
-
         public virtual ItemCategory Category { get; set; }
         public virtual ICollection<ItemMarkupHistory> ItemMarkupHistories { get; set; }
         public virtual ICollection<ItemsInOrder> ItemsInOrders { get; set; }
         public virtual ICollection<Review> Reviews { get; set; }
-        //public virtual ICollection<CustomerOrder> CustomerOrders { get; set; }
     }
 }

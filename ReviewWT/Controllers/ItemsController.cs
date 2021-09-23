@@ -45,111 +45,135 @@ namespace ReviewWT.Controllers
             newView.years = new SelectList(year_dropdown, "OrderDate");
             #endregion
 
-            //#region itemQuery
-
-            //var query = _context.ItemsInOrders
-            //    .Select(iio => iio);
-
-
-            //#endregion
-
             #region itemQuery
-
-            //var query = _context.ItemsInOrders
-            //    .Include(iio => iio.Item)
-            //    .Include(iio => iio.OrderNumberNavigation)
-            //    .Select(iio => new ItemsInOrder()
-            //    {
-            //        ItemId = iio.ItemId,
-            //        Item = iio.Item
-            //    });
-
             var query = _context.ItemsInOrders
                 .Where(iio => iio.Item.ItemName.Contains(searchText))
-                .Where(iio => iio.OrderNumberNavigation.OrderDate.Year == year)
-                //.Include(iio => iio.OrderNumberNavigation)
                 .Select(iio => iio);
-
             
-            //year
-            
-            //if (year.HasValue)
-            //{
-            //    query = query;
-            //}
-            //var query1 = query.GroupBy(iio => iio.ItemId)
-            //    .Select(iio => new ItemDetails { 
-            //        itemId = iio.Key, 
-            //        customerEffect = iio.Select(co => co.OrderNumberNavigation.CustomerId).Distinct().Count(),
-            //        unitsSold = iio.Sum(iio => iio.NumberOf),
-            //        item = _context.Items.Where(i => i.ItemId == iio.Key).FirstOrDefault()
-
-            //    }) ;
-
+            if (year.HasValue)
+            {
+                query = query.Where(iio => iio.OrderNumberNavigation.OrderDate.Year == year);
+            }
             var display_customer_order = query
-                //.Include(co => co.OrderNumberNavigation)
                 .GroupBy(iio => iio.ItemId)
+                .OrderBy(iio => iio.Key)
                 .Select(iio => new ItemDetails
                 {
                     itemId = iio.Key,
-                    customerEffect = iio.Select(co => co.OrderNumberNavigation.CustomerId).Distinct().Count(),
-                    unitsSold = iio.Sum(iio => iio.NumberOf)
+                    unitsSold = iio.Sum(iio => iio.NumberOf),
+                    customerEffect = iio.Select(co => co.OrderNumberNavigation.CustomerId).Distinct().Count()
                 });
 
-            var summary = display_customer_order
+            var customer_order_summary = display_customer_order
                 .Select(i => new ItemDetails
                 {
                     itemId=i.itemId,
                     customerEffect=i.customerEffect,
                     unitsSold=i.unitsSold,
-                    item = _context.Items.Include(c => c.Category).Where(c => c.ItemId == i.itemId).FirstOrDefault()
+                    item = _context.Items
+                        .Include(c => c.Category)
+                        .Where(c => c.ItemId == i.itemId).FirstOrDefault()
                 });
-                
-
             #endregion
 
             //newView has to have Model.item
             //and the Model.item has to have propaties
             //which are included below e.g. ItemsInOrder
             //Otherwise, newView.items does not work!
-            newView.items = await summary.ToListAsync();
+            newView.items = await customer_order_summary.ToListAsync();
 
+            newView.itemList = _context.Items.Select(i => i.ItemName).ToList();
 
-            //#region categories
-
-            //var query_category = _context.Items
-            //    .Select(ic => ic);
-
-           
-            
-
-            //#endregion
-
-            //newView.items = query_category.ToList();
-
-
-            //3-2-4 Execute the query with ToListAsync() and pass data to View
             return View(newView);
             
         }
 
         // GET: Items/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int id, int? purchasedYear)// id == itemId
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            CustomerSearchViewModel detailsView = new CustomerSearchViewModel();
+            detailsView.id = id;
+            detailsView.purchasedYear = purchasedYear;
 
-            var item = await _context.Items
-                .Include(i => i.Category)
-                .FirstOrDefaultAsync(m => m.ItemId == id);
-            if (item == null)
-            {
-                return NotFound();
-            }
+            //#region detailQuery
+            //var detailQuery = _context.CustomerOrders
+            //    .Include(i => i.ItemsInOrders)
+            //    .Where(i => i.ItemsInOrders.)
+            //    .Select(co => co);
 
-            return View(item);
+            //#endregion
+
+            #region detailQuery
+            var detailQuery = _context.ItemsInOrders
+                .Where(iio => iio.ItemId == id)
+                .Select(iio => iio);
+
+            Console.WriteLine("YEAR: "+purchasedYear.HasValue);
+            if (purchasedYear.HasValue)
+            {
+                detailQuery = detailQuery.Where(iio => iio.OrderNumberNavigation.OrderDate.Year == purchasedYear);
+            }
+            var get_details = detailQuery
+                .GroupBy(iio => iio.OrderNumberNavigation.CustomerId)
+                .OrderBy(iio => iio.Key)
+                .Select(cd => new CustomerDetails
+                {
+                    customerId = cd.Key,
+                    totalCost = cd.Sum(cd => cd.TotalItemCost),
+                    customerUnits = cd.Sum(cd => cd.NumberOf),
+                    
+                });
+
+            var details_summary = get_details
+                .Select(p => new CustomerDetails
+                {
+                    customerId = p.customerId,
+                    customerUnits = p.customerUnits,
+                    totalCost = p.totalCost,
+                    customerDetails = _context.CustomerOrders
+                        .Include(c => c.Customer)
+                        .ThenInclude(a => a.Address)
+                        .Where(c => c.CustomerId == p.customerId).FirstOrDefault()
+                }) ;
+            #endregion
+
+            #region itemDetails
+            var itemDetails = _context.Items
+                .Where(i => i.ItemId == id)
+                .Select(i => new CustomerSearchViewModel
+                {
+                    purchasedItemName = i.ItemName,
+                    purchasedItemImage = i.ItemImage
+                });
+
+            var display = itemDetails
+                .Select(id => new CustomerSearchViewModel
+                {
+                    purchasedItemImage = id.purchasedItemImage,
+                    purchasedItemName = id.purchasedItemName
+                }).ToList();
+
+
+            #endregion
+
+            //if (id == null)
+            //{
+            //    return NotFound();
+            //}
+
+            //var item = await _context.Items
+            //    .Include(i => i.Category)
+            //    .FirstOrDefaultAsync(m => m.ItemId == id);
+            //if (item == null)
+            //{
+            //    return NotFound();
+            //}
+
+            detailsView.customers = await details_summary.ToListAsync();
+            //detailsView.display = await itemDetails.ToListAsync();
+
+            //return View(item);
+            return View(detailsView);
         }
 
         // GET: Items/Create

@@ -11,6 +11,8 @@ namespace ReviewWT.ViewModels
         public int itemId { get; set; }
         public int unitsSold { get; set; }
         public int  customerEffect { get; set; }
-        public Models.ItemCategory category { get; set; }
+
+    //    public int customerId { get; set; }
+    //    public Models.ItemCategory category { get; set; }
     }
 }
