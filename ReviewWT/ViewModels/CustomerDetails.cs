@@ -15,8 +15,7 @@ namespace ReviewWT.ViewModels
         public int customerUnits { get; set; }  
         public decimal? totalCost { get; set; }
 
-        public string PurchasedItemName { get; set; }
-        public string PurchasedItemImage { get; set; }
+        
         //public string address { get; set; }
 
     }

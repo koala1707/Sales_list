@@ -88,10 +88,16 @@ namespace ReviewWT.Controllers
             
         }
 
+
+
+
+
+
+
         // GET: Items/Details/5
-        public async Task<IActionResult> Details(int id, int? purchasedYear)// id == itemId
+        public async Task<IActionResult> Details(int id, int? purchasedYear)
         {
-            CustomerSearchViewModel detailsView = new CustomerSearchViewModel();
+            ItemSearchViewModel detailsView = new ItemSearchViewModel();
             detailsView.id = id;
             detailsView.purchasedYear = purchasedYear;
 
@@ -106,6 +112,7 @@ namespace ReviewWT.Controllers
             #region detailQuery
             var detailQuery = _context.ItemsInOrders
                 .Where(iio => iio.ItemId == id)
+                //.Where(iio => iio.OrderNumberNavigation.OrderDate.Year == purchasedYear)
                 .Select(iio => iio);
 
             Console.WriteLine("YEAR: "+purchasedYear.HasValue);
@@ -113,6 +120,8 @@ namespace ReviewWT.Controllers
             {
                 detailQuery = detailQuery.Where(iio => iio.OrderNumberNavigation.OrderDate.Year == purchasedYear);
             }
+
+
             var get_details = detailQuery
                 .GroupBy(iio => iio.OrderNumberNavigation.CustomerId)
                 .OrderBy(iio => iio.Key)
@@ -140,18 +149,20 @@ namespace ReviewWT.Controllers
             #region itemDetails
             var itemDetails = _context.Items
                 .Where(i => i.ItemId == id)
-                .Select(i => new CustomerSearchViewModel
+                .Select(i => new PurchasedItemDetails
                 {
                     purchasedItemName = i.ItemName,
-                    purchasedItemImage = i.ItemImage
+                    purchasedItemImage = i.ItemImage,
+                    purchasedItemCost = i.ItemCost,
+                    purchasedItemDescription = i.ItemDescription
                 });
 
-            var display = itemDetails
-                .Select(id => new CustomerSearchViewModel
-                {
-                    purchasedItemImage = id.purchasedItemImage,
-                    purchasedItemName = id.purchasedItemName
-                }).ToList();
+            //var display = itemDetails
+            //    .Select(id => new ItemSearchViewModel
+            //    {
+            //        purchasedItemImage = id.purchasedItemImage,
+            //        purchasedItemName = id.purchasedItemName
+            //    }).ToList();
 
 
             #endregion
@@ -170,11 +181,38 @@ namespace ReviewWT.Controllers
             //}
 
             detailsView.customers = await details_summary.ToListAsync();
-            //detailsView.display = await itemDetails.ToListAsync();
+            detailsView.itemDetails = await itemDetails.ToListAsync();
 
             //return View(item);
             return View(detailsView);
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         // GET: Items/Create
         public IActionResult Create()
@@ -182,6 +220,7 @@ namespace ReviewWT.Controllers
             ViewData["CategoryId"] = new SelectList(_context.ItemCategories, "CategoryId", "CategoryName");
             return View();
         }
+
 
         // POST: Items/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.

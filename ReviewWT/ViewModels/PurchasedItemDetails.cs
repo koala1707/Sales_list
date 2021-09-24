@@ -7,7 +7,9 @@ namespace ReviewWT.ViewModels
 {
     public class PurchasedItemDetails
     {
-        public string PurchasedItemName { get; set; }
-        public string PurchasedItemImage { get; set; }
+        public string purchasedItemName { get; set; }
+        public string purchasedItemImage { get; set; }
+        public decimal purchasedItemCost { get; set; }
+        public string purchasedItemDescription { get; set; }
     }
 }

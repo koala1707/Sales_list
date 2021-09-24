@@ -34,7 +34,6 @@ namespace ReviewWT.Models
         [Display(Name = "Item Cost")]
         [DataType(DataType.Currency)]
         [Column(TypeName ="decimal(20,1)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.#}", ApplyFormatInEditMode = true)]
         public decimal ItemCost { get; set; }
         
         [Display(Name = "Item Image")]
