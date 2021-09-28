@@ -1,0 +1,176 @@
+﻿@model ReviewWT.ViewModels.ItemSearchViewModel
+
+
+@{
+    ViewData["Title"] = "Annual Report";
+}
+
+<div class="jumbotron p-1 mb-2 text-center" style="background-color: antiquewhite">
+    <h2>Annual Sales Report</h2>
+    <hr />
+    <p class="p-2" style="text-align: left">Select a year to view the individual sales summary of each item</p>
+</div>
+<div class="mb-2 row">
+    <div class="col-2">
+        <select asp-for="year" asp-items="Model.years" class="form-control">
+            <option value="">Select a Year</option>
+        </select>
+    </div>
+</div>
+<div class="row">
+    <div class="col-12">
+        <svg width="100%" height="1000px" class="border rounded border-primary p-2"></svg>
+    </div>
+</div>
+
+
+@section scripts{ 
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        //1. select SVG element
+        var svg = d3.select('svg');
+
+        //2. determine the size of the SVG element
+        var h = svg.node().getBoundingClientRect().height;
+        var w = svg.node().getBoundingClientRect().width;
+
+        console.log('Height: ' + h);
+        console.log('Width: ' + w);
+
+        //12. Chart Margins
+        var chartMargins = {
+            left: 300,
+            right: 25,
+            top: 25,
+            bottom: 40
+        };
+
+        h = h - (chartMargins.top + chartMargins.bottom);
+        w = w - (chartMargins.left + chartMargins.right);
+
+        //3. DDL year event listener
+        d3.select('.row .col-2 [name="year"]').on('change', (e) => {
+            let year = e.target.value;
+            console.log("Year: " + year);
+
+            if (year.length > 0) {
+                fetch(`/Items/AnnualSalesReportData?year=${year}`)
+                    .then(response => response.json())
+                    .then(data => buildGraph(data))
+            }
+        })
+
+        function buildGraph(dataSet) {
+            console.log(dataSet)
+
+            //calculate the maximum value to be displayed
+            let totalItemsRange = d3.extent(dataSet, (d, i) => d.totalItems);
+            console.log('totalItemsRange: '+totalItemsRange)
+            let maxTotalItems = totalItemsRange[1]; //max
+
+            console.log("Max totalItems: " + maxTotalItems);
+
+            svg.selectAll('*').remove();
+
+            var chartGroup = svg.append('g')
+                .classed('chartGroup', true)
+                .attr('transform', `translate(${chartMargins.left}, ${chartMargins.top})`);
+
+            //5. select all 'g' elements and bind the dataSet to display data
+            //var barGroups = svg.selectAll('g').data(dataSet);
+            var barGroups = chartGroup.selectAll('g').data(dataSet);
+
+            //8. Create a XScale
+            var xScale = d3.scaleLinear()
+                .domain([0, maxTotalItems + 5])
+                .range([w, 0]);//xAxis label
+
+            //10-1. Create YScale
+            var unitsArray = Array.from(dataSet, (d, i) => d.itemName);
+            var yScale = d3.scaleBand()
+                .domain(unitsArray)
+                .range([h, 0]) // 
+                .paddingInner(0.1)
+
+            //6.add new bar groups
+            var newBarGroups = barGroups.enter()
+                .append('g')
+                .attr('transform', (d, i) => {
+                    return `translate(0, ${yScale(d.itemName)})`;
+                    //return `translate(${(d.totalItems / maxTotalItems)}, ${(i * barWidth)})`;
+                    //return transform = "translater(x,y)"
+                }); //end transform
+
+            
+            //7. append new rectangles
+            newBarGroups
+                .append('rect')
+                .attr('height', yScale.bandwidth())
+                .attr('x', 0)
+                .attr('width', 0)// display from left to right for animation
+                //.attr('width', (d, i) => { return w - xScale(d.totalItems); })
+                //.attr('fill', 'black')
+                .transition()
+                .duration((d, i) => i * 500)
+                .delay((d, i) => i + 200)
+                .attr('x', 0)
+                .attr('height', yScale.bandwidth())
+                //.attr('width', (d, i) => { return xScale(d.totalItems); })
+                .attr('width', (d, i) => { return w - xScale(d.totalItems); })
+                //.style('fill', (d, i) => { return `rgb(40,40,${i * 15 + 80})` });
+                .style('fill', (d, i) => { return `hsl(240,100%,${(100 - (d.totalItems / maxTotalItems*80))}%)` });
+                //.attr('y', function (d) { return xScale(d.itemName); })
+                //.attr('height', (d, i) => barWidth - barMargin)
+                //.attr('width', (d, i) => { return d.totalItems / maxTotalItems * h; });
+
+                
+
+            //14. adding bar text
+            newBarGroups
+                .append('text')
+                .attr('text-anchor', 'middle')
+                .attr('y', (d, i) => { return yScale.bandwidth() / 2; })
+                .attr('x', (d, i) => { return w - xScale(d.totalItems) -15; })
+                .attr('dy', '0.25em')
+                .attr('fill', 'white')
+                .style('font-size', '0.8em')
+                .text((d, i) => d.totalItems.toLocaleString());
+
+
+            //11.Creating labels for Y-axis
+            var yAxis = d3.axisLeft(yScale);
+            chartGroup.append('g')
+                .classed('axis y', true)
+                .call(yAxis);
+            chartGroup
+                .selectAll('.axis.y text')
+                .style('font-size', '1.2em')
+
+           
+
+            //13. Adding the xAxis
+            var xAxis = d3.axisBottom(xScale);
+            chartGroup.append('g')
+                .attr('transform', `translate(0, ${h})`)
+                .classed('axis x', true)
+                .call(xAxis);
+
+            chartGroup
+                .selectAll('.axis.x text')
+                .attr('dx', '0.5em')
+                .attr('dy', '0.5em')
+                .style('text-anchor', 'end')
+                .style('font-size', '1.2em');
+                
+
+            
+
+           
+            
+
+        }
+
+    </script>
+}
+
