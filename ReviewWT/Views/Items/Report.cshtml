@@ -19,6 +19,8 @@
 </div>
 <div class="row">
     <div class="col-12">
+        @*https://www.youtube.com/watch?v=kz4OCMzkEnY*@
+        <label><input type="checkbox" /> Sort By Unit</label>
         <svg width="100%" height="1000px" class="border rounded border-primary p-2"></svg>
     </div>
 </div>
@@ -73,6 +75,35 @@
 
             svg.selectAll('*').remove();
 
+            //shrink
+            //svg.exit()
+            //    .classed('enter update', false)
+            //    .classed('exit', true)
+            //    .style('fill', '#dc3545')
+            //    .transition()
+            //    .duration((d, i) => i + 80)
+            //    .attr('y', h)
+            //    .attr(h, 0)
+            //    .remove();
+
+            //d3.selectAll('svg').on('click', function () {
+            //    d3.select(this)
+            //        .classed('exit', true)
+            //        .transition()
+            //        .duration(100)
+            //        .attr('x', w)
+            //        .attr('w', 0)
+            //        .remove();
+            //})
+                //.classed('enter update', false)
+                //.classed('exit', true)
+                //.style('fill', '#dc3545')
+                //.transition()
+                //.duration((d, i) => i + 80)
+                //.attr('y', h)
+                //.attr(h, 0)
+                //.remove();
+
             var chartGroup = svg.append('g')
                 .classed('chartGroup', true)
                 .attr('transform', `translate(${chartMargins.left}, ${chartMargins.top})`);
@@ -84,7 +115,7 @@
             //8. Create a XScale
             var xScale = d3.scaleLinear()
                 .domain([0, maxTotalItems + 5])
-                .range([w, 0]);//xAxis label
+                .range([0, w]);//xAxis label
 
             //10-1. Create YScale
             var unitsArray = Array.from(dataSet, (d, i) => d.itemName);
@@ -92,6 +123,8 @@
                 .domain(unitsArray)
                 .range([h, 0]) // 
                 .paddingInner(0.1)
+
+            
 
             //6.add new bar groups
             var newBarGroups = barGroups.enter()
@@ -103,6 +136,7 @@
                 }); //end transform
 
             
+            
             //7. append new rectangles
             newBarGroups
                 .append('rect')
@@ -112,13 +146,12 @@
                 //.attr('width', (d, i) => { return w - xScale(d.totalItems); })
                 //.attr('fill', 'black')
                 .transition()
-                .duration((d, i) => i * 500)
-                .delay((d, i) => i + 200)
+                .duration((d, i) => i * 200)
+                .delay((d, i) => i + 80)
                 .attr('x', 0)
                 .attr('height', yScale.bandwidth())
                 //.attr('width', (d, i) => { return xScale(d.totalItems); })
-                .attr('width', (d, i) => { return w - xScale(d.totalItems); })
-                //.style('fill', (d, i) => { return `rgb(40,40,${i * 15 + 80})` });
+                .attr('width', (d, i) => { return  xScale(d.totalItems); })
                 .style('fill', (d, i) => { return `hsl(240,100%,${(100 - (d.totalItems / maxTotalItems*80))}%)` });
                 //.attr('y', function (d) { return xScale(d.itemName); })
                 //.attr('height', (d, i) => barWidth - barMargin)
@@ -131,7 +164,7 @@
                 .append('text')
                 .attr('text-anchor', 'middle')
                 .attr('y', (d, i) => { return yScale.bandwidth() / 2; })
-                .attr('x', (d, i) => { return w - xScale(d.totalItems) -15; })
+                .attr('x', (d, i) => { return xScale(d.totalItems) -15; })
                 .attr('dy', '0.25em')
                 .attr('fill', 'white')
                 .style('font-size', '0.8em')
@@ -164,12 +197,9 @@
                 .style('font-size', '1.2em');
                 
 
-            
-
-           
-            
-
         }
+
+     
 
     </script>
 }

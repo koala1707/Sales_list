@@ -29,7 +29,7 @@
 
     <p>
         Your search returned @Model.customers.Count()
-        matching item@(Model.customers.Count() != 1 ? "s" : "")
+        matching customer@(Model.customers.Count() != 1 ? "s" : "")
     </p>
 
     <div class="row justify-content-between">
@@ -50,13 +50,20 @@
                 @foreach (var item in Model.customers)
                 {
 
-                    <tr>
-                        <td>@item.customerDetails.Customer.FirstName @item.customerDetails.Customer.LastName</td>
-                        <td>@item.customerDetails.Customer.MainPhoneNumber<br/>@item.customerDetails.Customer.Email</td>
-                        <td>@item.customerDetails.Customer.Address.AddressLine</td>
-                        <td>$@item.totalCost</td>
-                        <td>@item.customerUnits </td>
-                    </tr>
+                <tr>
+                    <td>@item.customerDetails.Customer.FirstName @item.customerDetails.Customer.LastName</td>
+                    @if (item.customerDetails.Customer.MainPhoneNumber != "")
+                    {
+                        <td>@item.customerDetails.Customer.MainPhoneNumber<br />@item.customerDetails.Customer.Email</td>
+                    }
+                    else
+                    {
+                        <td>@item.customerDetails.Customer.SecondaryPhoneNumber<br />@item.customerDetails.Customer.Email</td>
+                    }
+                    <td>@item.customerDetails.Customer.Address.AddressLine</td>
+                    <td>$@item.totalCost</td>
+                    <td>@item.customerUnits </td>
+                </tr>
                 }
 
             </tbody>

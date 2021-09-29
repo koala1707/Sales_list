@@ -31,7 +31,7 @@
         @* the below input does not retain searched word user input *@
         @*<input list="items-list" type="text" name="searchText" class="form-control" placeholder="Item Search" title="Search for items by name" maxlength="100" />*@
         
-        <input asp-for="searchText" type="text"  list="itemsList" placeholder="Item Search" title="Search for items by name" minlength="2" maxlength="100" />
+        <input asp-for="searchText" type="text"  list="itemsList" placeholder="Item Search" title="Search for items by name" minlength="2" maxlength="100" style="border:1px solid; border-radius:0.3em; width:15em; height:2.5em; text-align:center" />
         <datalist id="itemsList">
             @foreach (var itemname in Model.itemList)
             {
@@ -40,13 +40,12 @@
         </datalist>
     </div>
     <div class="col-gl-2">
-        <select asp-for="year" class="form-control" asp-items="Model.years">
+        <select asp-for="year" class="form-control" asp-items="Model.years" style="border:1px solid">
             <option value="">Sale Year</option>
         </select>
     </div>
     <div class="col">
         <button type="submit" class="btn btn-secondary">Search</button>
-        @*<input type="submit" name="searchText" value=""/>*@
         <br>
         <br>
     </div>
@@ -80,21 +79,22 @@
                 </tr>
             </thead>
             <tbody>
-                    
+
                 @foreach (var item in Model.items)
                 {
+
+                    <tr onclick="">
+                        <td>@item.item.ItemName</td>
+                        <td>@item.item.ItemDescription</td>
+                        <td>@item.item.ItemCost.ToString("C")</td>
+                        <td>@item.item.Category.CategoryName</td>
+                        <td>@item.unitsSold </td>
+                        <td>@item.customerEffect </td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.item.ItemId" class="btn btn-outline-dark">Details</a>
+                        </td>
+                    </tr>
                     
-                <tr>
-                    <td>@item.item.ItemName</td>
-                    <td>@item.item.ItemDescription</td>
-                    <td>@item.item.ItemCost.ToString("C")</td>
-                    <td>@item.item.Category.CategoryName</td>
-                    <td>@item.unitsSold </td>
-                    <td>@item.customerEffect </td>
-                    <td>
-                        <a asp-action="Details" asp-route-id="@item.item.ItemId" class="btn btn-outline-dark">Details</a>
-                    </td>
-                </tr>
                 }
 
             </tbody>
@@ -103,7 +103,10 @@
         
     </div>
     <script>
-        var tr = document.querySelectorAll('tbody tr');
+        var tr = document.querySelectorAll('tbody tr')
+            .forEach(e => e.addEventListener("click", function () {
+                document.querySelector('tbody a').click();
+            }));
 
     </script>
 }
